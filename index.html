@@ -1,20 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5f1">
   <title>RevisaMed</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #f7f5f1;
       --card: #ffffff;
-      --ink: #1d2939;
-      --muted: #667085;
-      --primary: #3c5ccf;
-      --line: #e4e7ec;
-      --danger: #b42318;
+      --text: #242a35;
+      --muted: #737987;
+      --primary: #526b59;
+      --primary-dark: #3e5345;
+      --border: #e4e4df;
+      --danger: #a33d3d;
+      --soft: #edf1eb;
     }
 
     * { box-sizing: border-box; }
@@ -22,1039 +25,1076 @@
     body {
       margin: 0;
       background: var(--bg);
-      color: var(--ink);
-      font: 16px/1.5 system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, sans-serif;
+      line-height: 1.5;
     }
 
-    header {
-      background: #202e58;
-      color: white;
-      padding: 24px 18px;
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .container {
+      width: min(100% - 28px, 900px);
+      margin: 0 auto;
+      padding: 28px 0 60px;
     }
 
-    header .wrap, main, footer {
-      max-width: 900px;
-      margin: auto;
+    header { margin-bottom: 26px; }
+
+    .brand {
+      font-size: 29px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 0;
     }
 
-    h1 { margin: 0; font-size: 1.8rem; }
-    header p { margin: 4px 0 0; color: #d9e2ff; }
-
-    main { padding: 20px 14px 40px; }
+    .subtitle { color: var(--muted); margin: 4px 0 0; }
 
     .panel {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 16px #10182808;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 23px;
+      margin-bottom: 18px;
+      box-shadow: 0 5px 20px #20202005;
     }
 
     .hidden { display: none !important; }
 
-    h2, h3 { margin-top: 0; }
+    h2 { margin: 0 0 8px; font-size: 22px; }
+    h3 { margin: 0 0 10px; font-size: 17px; }
+    p { margin-top: 5px; }
+
+    .muted { color: var(--muted); font-size: 14px; }
 
     label {
       display: block;
+      margin: 15px 0 6px;
+      font-size: 14px;
       font-weight: 650;
-      margin: 12px 0 5px;
     }
 
     input, textarea, select {
       width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
       padding: 12px;
-      border: 1px solid #cfd5df;
-      border-radius: 9px;
-      font: inherit;
       background: white;
-      color: var(--ink);
+      color: var(--text);
+      outline: none;
     }
 
-    textarea { min-height: 110px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px #526b5915;
+    }
+
+    textarea { min-height: 105px; resize: vertical; }
 
     button {
       border: 0;
-      border-radius: 9px;
+      border-radius: 10px;
+      padding: 11px 15px;
       background: var(--primary);
       color: white;
-      font: inherit;
       font-weight: 650;
-      padding: 11px 15px;
-      cursor: pointer;
-      margin: 8px 6px 0 0;
     }
 
-    button.secondary { background: #e9edfb; color: #263b8b; }
-    button.danger { background: #b42318; }
-    button:disabled { opacity: .55; cursor: wait; }
+    button:hover { background: var(--primary-dark); }
 
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .row > * { flex: 1; min-width: 160px; }
+    button.secondary {
+      background: var(--soft);
+      color: var(--primary-dark);
+    }
 
-    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .tabs button { margin: 0; }
-    .tabs button.active { background: #202e58; }
+    button.secondary:hover { background: #e0e7dd; }
+
+    button.danger {
+      background: #faeeee;
+      color: var(--danger);
+    }
+
+    button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 17px;
+    }
+
+    .actions button { flex: 1 1 130px; }
 
     .message {
-      padding: 10px 12px;
-      border-radius: 9px;
-      background: #eef4ff;
-      color: #2445a0;
-      margin: 10px 0;
-    }
-
-    .message.error { background: #fef3f2; color: var(--danger); }
-    .message:empty { display: none; }
-    .muted { color: var(--muted); }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .stat {
-      background: #f3f5fc;
-      border-radius: 12px;
-      padding: 13px;
-      text-align: center;
-    }
-
-    .stat strong { display: block; font-size: 1.5rem; }
-
-    .flashcard {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 18px;
-      margin: 12px 0;
+      margin-top: 14px;
+      font-size: 14px;
       overflow-wrap: anywhere;
     }
 
-    .question { font-size: 1.15rem; font-weight: 700; white-space: pre-wrap; }
-    .answer { white-space: pre-wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .message.error { color: var(--danger); }
+    .message.success { color: var(--primary-dark); }
 
-    .pill {
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+    }
+
+    .stat {
+      background: var(--soft);
+      border-radius: 13px;
+      padding: 15px;
+    }
+
+    .stat strong { display: block; font-size: 25px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+    }
+
+    .tabs button { flex: 0 0 auto; }
+    .tabs button.active { background: var(--primary-dark); }
+
+    .flashcard {
+      min-height: 210px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 22px;
+      margin-top: 12px;
+      background: #fff;
+    }
+
+    .flashcard .question {
+      white-space: pre-wrap;
+      font-size: 19px;
+      font-weight: 650;
+    }
+
+    .flashcard .answer {
+      white-space: pre-wrap;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .tag {
       display: inline-block;
-      background: #eef2ff;
-      color: #3446a1;
+      padding: 4px 9px;
       border-radius: 20px;
-      padding: 3px 9px;
-      font-size: .82rem;
-      margin: 0 5px 6px 0;
+      background: var(--soft);
+      color: var(--primary-dark);
+      font-size: 12px;
+      margin: 3px 4px 3px 0;
     }
 
-    .card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-    .card-actions button { font-size: .9rem; }
-    .empty { padding: 24px; text-align: center; color: var(--muted); }
-
-    footer {
-      text-align: center;
-      padding: 0 12px 25px;
-      color: var(--muted);
-      font-size: .9rem;
+    .card-item {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--border);
     }
 
-    @media (max-width: 520px) {
-      .stats { grid-template-columns: 1fr 1fr; }
-      .panel { padding: 16px; }
-      header { padding: 20px 14px; }
+    .card-item:last-child { border-bottom: 0; }
+
+    .card-item strong {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .topline button { flex: 0 0 auto; }
+
+    .small { font-size: 13px; }
+
+    @media (max-width: 540px) {
+      .container { width: min(100% - 20px, 900px); padding-top: 18px; }
+      .panel { padding: 17px; }
+      .grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 
 <body>
-<header>
-  <div class="wrap">
-    <h1>RevisaMed</h1>
-    <p>Seu espaço de revisão por flashcards</p>
-  </div>
-</header>
+  <main class="container">
+    <header>
+      <h1 class="brand">RevisaMed</h1>
+      <p class="subtitle">Seu espaço de revisão por flashcards</p>
+      <p class="muted">RevisaMed · Estude um pouco todos os dias</p>
+    </header>
 
-<main>
-  <!-- CONFIGURAÇÃO -->
-  <section id="configScreen" class="panel hidden">
-    <h2>Configuração</h2>
-    <p class="muted">Conecte o aplicativo ao seu projeto Supabase.</p>
+    <section id="configScreen" class="panel hidden">
+      <h2>Configurar RevisaMed</h2>
+      <p class="muted">Informe os dados públicos do projeto Supabase.</p>
+      <form id="configForm">
+        <label for="projectUrl">URL do projeto</label>
+        <input id="projectUrl" type="url" required
+          value="https://pwvwfzreqiqrgoutxgsk.supabase.co">
 
-    <label for="projectUrl">URL do projeto Supabase</label>
-    <input id="projectUrl" type="url">
+        <label for="publishableKey">Chave publishable</label>
+        <input id="publishableKey" type="text" required
+          autocomplete="off" placeholder="Cole sua chave publishable">
 
-    <label for="publishableKey">Chave publishable</label>
-    <input id="publishableKey" type="text" autocomplete="off">
-
-    <button id="saveConfig">Salvar configuração</button>
-    <div id="configMessage" class="message"></div>
-  </section>
-
-  <!-- LOGIN -->
-  <section id="loginScreen" class="panel hidden">
-    <h2>Entrar no RevisaMed</h2>
-    <p class="muted">Entre com seu e-mail e sua senha.</p>
-
-    <form id="loginForm">
-      <label for="email">E-mail</label>
-      <input id="email" type="email" autocomplete="email" required>
-
-      <label for="password">Senha</label>
-      <input id="password" type="password" autocomplete="current-password" required>
-
-      <button id="loginButton" type="submit">Entrar</button>
-      <button id="resetButton" class="secondary" type="button">
-        Recuperar senha
-      </button>
-    </form>
-
-    <div id="loginMessage" class="message"></div>
-    <button id="configButton" class="secondary" type="button">Configurações</button>
-  </section>
-
-  <!-- NOVA SENHA -->
-  <section id="passwordScreen" class="panel hidden">
-    <h2>Criar nova senha</h2>
-    <p>Digite e confirme sua nova senha.</p>
-
-    <form id="newPasswordForm">
-      <label for="newPassword">Nova senha</label>
-      <input id="newPassword" type="password" minlength="6"
-             autocomplete="new-password" required>
-
-      <label for="confirmPassword">Confirme a nova senha</label>
-      <input id="confirmPassword" type="password" minlength="6"
-             autocomplete="new-password" required>
-
-      <button id="updatePasswordButton" type="submit">Salvar nova senha</button>
-    </form>
-
-    <div id="passwordMessage" class="message"></div>
-  </section>
-
-  <!-- APLICATIVO -->
-  <section id="appScreen" class="hidden">
-    <div class="panel">
-      <div class="row" style="align-items:center">
-        <div>
-          <h2 style="margin-bottom:2px">Olá!</h2>
-          <div id="accountEmail" class="muted"></div>
+        <div class="actions">
+          <button type="submit">Salvar configuração</button>
         </div>
-        <div style="text-align:right">
-          <button id="logoutButton" class="secondary">Sair</button>
-        </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat"><strong id="totalCount">0</strong>Flashcards</div>
-        <div class="stat"><strong id="dueCount">0</strong>Para revisar</div>
-        <div class="stat"><strong id="reviewedCount">0</strong>Revisados nesta sessão</div>
-      </div>
-    </div>
-
-    <div class="tabs">
-      <button class="active" data-tab="reviewSection">Revisar</button>
-      <button data-tab="createSection">Criar flashcard</button>
-      <button data-tab="cardsSection">Meus flashcards</button>
-    </div>
-
-    <section id="reviewSection" class="panel">
-      <h2>Revisão</h2>
-      <div id="reviewArea"></div>
+      </form>
+      <div id="configMessage" class="message" role="status"></div>
     </section>
 
-    <section id="createSection" class="panel hidden">
-      <h2 id="formTitle">Criar flashcard</h2>
+    <section id="loginScreen" class="panel hidden">
+      <h2>Entrar no RevisaMed</h2>
+      <p class="muted">Entre com seu e-mail e sua senha.</p>
 
-      <form id="cardForm">
-        <input id="cardId" type="hidden">
+      <form id="loginForm">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" required>
 
-        <label for="subject">Matéria</label>
-        <input id="subject" maxlength="120" placeholder="Ex.: Fisiologia">
+        <label for="password">Senha</label>
+        <input id="password" type="password"
+          autocomplete="current-password" required>
 
-        <label for="topic">Tema</label>
-        <input id="topic" maxlength="160" placeholder="Ex.: Potencial de ação">
-
-        <label for="question">Pergunta</label>
-        <textarea id="question" required placeholder="Digite a pergunta..."></textarea>
-
-        <label for="answer">Resposta</label>
-        <textarea id="answer" required placeholder="Digite a resposta..."></textarea>
-
-        <label for="difficulty">Dificuldade</label>
-        <select id="difficulty">
-          <option value="medium">Média</option>
-          <option value="easy">Fácil</option>
-          <option value="hard">Difícil</option>
-        </select>
-
-        <button id="saveCardButton" type="submit">Salvar flashcard</button>
-        <button id="cancelEditButton" type="button" class="secondary hidden">
-          Cancelar edição
-        </button>
+        <div class="actions">
+          <button id="loginButton" type="submit">Entrar</button>
+          <button id="resetButton" class="secondary" type="button">
+            Recuperar senha
+          </button>
+          <button id="signupButton" class="secondary" type="button">
+            Criar conta
+          </button>
+        </div>
       </form>
 
-      <div id="formMessage" class="message"></div>
+      <div id="loginMessage" class="message" role="status"></div>
     </section>
 
-    <section id="cardsSection" class="panel hidden">
-      <h2>Meus flashcards</h2>
+    <section id="passwordScreen" class="panel hidden">
+      <h2>Definir nova senha</h2>
+      <p class="muted">Escolha uma senha nova para sua conta.</p>
 
-      <div class="row">
-        <div>
-          <label for="subjectFilter">Filtrar por matéria</label>
-          <select id="subjectFilter">
-            <option value="">Todas as matérias</option>
-          </select>
+      <form id="passwordForm">
+        <label for="newPassword">Nova senha</label>
+        <input id="newPassword" type="password"
+          autocomplete="new-password" minlength="6" required>
+
+        <label for="confirmPassword">Confirmar nova senha</label>
+        <input id="confirmPassword" type="password"
+          autocomplete="new-password" minlength="6" required>
+
+        <div class="actions">
+          <button type="submit">Salvar nova senha</button>
         </div>
-        <div>
-          <label for="searchCards">Buscar</label>
-          <input id="searchCards" placeholder="Pesquisar flashcards">
+      </form>
+
+      <div id="passwordMessage" class="message" role="status"></div>
+    </section>
+
+    <section id="appScreen" class="hidden">
+      <div class="panel">
+        <div class="topline">
+          <div>
+            <h2>Meu espaço de estudos</h2>
+            <p id="accountEmail" class="muted"></p>
+          </div>
+          <button id="logoutButton" class="secondary" type="button">
+            Sair
+          </button>
+        </div>
+        <div class="grid">
+          <div class="stat">
+            <strong id="totalCount">0</strong>
+            <span>Flashcards criados</span>
+          </div>
+          <div class="stat">
+            <strong id="dueCount">0</strong>
+            <span>Para revisar hoje</span>
+          </div>
         </div>
       </div>
 
-      <div id="cardsList"></div>
+      <nav class="tabs" aria-label="Seções do RevisaMed">
+        <button class="active" data-tab="studyTab" type="button">Estudar</button>
+        <button class="secondary" data-tab="createTab" type="button">Criar</button>
+        <button class="secondary" data-tab="listTab" type="button">Meus cards</button>
+      </nav>
+
+      <section id="studyTab" class="panel">
+        <h2>Revisão diária</h2>
+        <p class="muted">Pratique a lembrança antes de revelar a resposta.</p>
+
+        <label for="studySubject">Filtrar por matéria</label>
+        <select id="studySubject">
+          <option value="">Todas as matérias</option>
+        </select>
+
+        <div id="studyArea">
+          <p class="muted">Carregando seus flashcards...</p>
+        </div>
+      </section>
+
+      <section id="createTab" class="panel hidden">
+        <h2 id="editorTitle">Criar flashcard</h2>
+
+        <form id="cardForm">
+          <input id="editingId" type="hidden">
+
+          <label for="subject">Matéria</label>
+          <input id="subject" maxlength="120" placeholder="Ex.: Fisiologia" required>
+
+          <label for="topic">Assunto</label>
+          <input id="topic" maxlength="160" placeholder="Ex.: Potencial de ação">
+
+          <label for="question">Pergunta</label>
+          <textarea id="question" maxlength="10000"
+            placeholder="Escreva a pergunta..." required></textarea>
+
+          <label for="answer">Resposta</label>
+          <textarea id="answer" maxlength="10000"
+            placeholder="Escreva a resposta..." required></textarea>
+
+          <label for="difficulty">Dificuldade</label>
+          <select id="difficulty">
+            <option value="easy">Fácil</option>
+            <option value="medium" selected>Média</option>
+            <option value="hard">Difícil</option>
+          </select>
+
+          <div class="actions">
+            <button id="saveCardButton" type="submit">Salvar flashcard</button>
+            <button id="cancelEditButton" class="secondary hidden"
+              type="button">Cancelar edição</button>
+          </div>
+        </form>
+
+        <div id="cardMessage" class="message" role="status"></div>
+      </section>
+
+      <section id="listTab" class="panel hidden">
+        <h2>Meus flashcards</h2>
+
+        <label for="searchCards">Pesquisar</label>
+        <input id="searchCards" type="search"
+          placeholder="Matéria, assunto ou pergunta...">
+
+        <div id="cardsList"></div>
+        <div id="listMessage" class="message" role="status"></div>
+      </section>
+
+      <div id="globalMessage" class="message" role="status"></div>
     </section>
-  </section>
+  </main>
 
-  <div id="globalMessage" class="message"></div>
-</main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    "use strict";
 
-<footer>RevisaMed · Estude um pouco todos os dias.</footer>
+    const DEFAULT_URL = "https://pwvwfzreqiqrgoutxgsk.supabase.co";
+    const $ = id => document.getElementById(id);
 
-<script>
-(() => {
-  "use strict";
+    let supabaseClient = null;
+    let currentUser = null;
+    let cards = [];
+    let studyQueue = [];
+    let studyIndex = 0;
+    let answerVisible = false;
+    let recoveryMode = false;
+    let authSubscription = null;
+    let loadingCards = false;
 
-  // CONFIGURAÇÃO DO SEU PROJETO SUPABASE
-  const DEFAULT_URL = "https://pwvwfzreqiqrgoutxgsk.supabase.co";
-  const DEFAULT_KEY = "sb_publishable_JLauGBDhg218QMg80Sn7dQ_50K5K7xS";
+    function showScreen(id) {
+      ["configScreen", "loginScreen", "passwordScreen", "appScreen"]
+        .forEach(screen => $(screen).classList.toggle("hidden", screen !== id));
+    }
 
-  const $ = id => document.getElementById(id);
+    function showMessage(id, message = "", error = false) {
+      const el = $(id);
+      el.textContent = message;
+      el.className = "message" +
+        (message ? (error ? " error" : " success") : "");
+    }
 
-  let supabaseClient = null;
-  let currentUser = null;
-  let allCards = [];
-  let editingId = null;
-  let currentReview = null;
-  let answerVisible = false;
-  let reviewedToday = 0;
-  let recoveryMode = false;
-
-  function showMessage(id, text, error = false) {
-    const el = $(id);
-    if (!el) return;
-    el.textContent = text || "";
-    el.classList.toggle("error", !!error && !!text);
-  }
-
-  function showScreen(id) {
-    ["configScreen", "loginScreen", "passwordScreen", "appScreen"]
-      .forEach(screen => $(screen).classList.toggle("hidden", screen !== id));
-  }
-
-  function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    })[char]);
-  }
-
-  function setBusy(id, busy, label) {
-    const button = $(id);
-    if (!button) return;
-
-    if (busy) {
-      button.dataset.oldText = button.textContent;
-      button.disabled = true;
-      button.textContent = label || "Aguarde...";
-    } else {
-      button.disabled = false;
-      if (button.dataset.oldText) {
-        button.textContent = button.dataset.oldText;
-        delete button.dataset.oldText;
+    function setBusy(button, busy, text) {
+      if (!button.dataset.originalText) {
+        button.dataset.originalText = button.textContent;
       }
-    }
-  }
-
-  function connect(url, key) {
-    if (!window.supabase?.createClient) {
-      throw new Error("Não foi possível carregar o Supabase. Verifique sua conexão.");
+      button.disabled = busy;
+      button.textContent = busy ? text : button.dataset.originalText;
     }
 
-    url = String(url || "").trim().replace(/\/+$/, "");
-    key = String(key || "").trim();
-
-    if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) {
-      throw new Error("A URL do Supabase parece inválida.");
-    }
-
-    if (!key) {
-      throw new Error("Informe a chave publishable do Supabase.");
-    }
-
-    supabaseClient = window.supabase.createClient(url, key, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
-
-    localStorage.setItem("revisamed_url", url);
-    localStorage.setItem("revisamed_key", key);
-  }
-
-  function openConfig() {
-    $("projectUrl").value =
-      localStorage.getItem("revisamed_url") || DEFAULT_URL;
-    $("publishableKey").value =
-      localStorage.getItem("revisamed_key") || DEFAULT_KEY;
-    showScreen("configScreen");
-  }
-
-  function today() {
-    const now = new Date();
-    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 10);
-  }
-
-  function dateOnly(value) {
-    return value ? String(value).slice(0, 10) : "";
-  }
-
-  function dueCards() {
-    const currentDate = today();
-    return allCards.filter(card =>
-      !card.next_review || dateOnly(card.next_review) <= currentDate
-    );
-  }
-
-  // ÚNICA FUNÇÃO DE INICIALIZAÇÃO
-  async function start() {
-  try {
-    const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
-    const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
-
-    connect(url, key);
-
-    const hashParams = new URLSearchParams(
-      window.location.hash.replace(/^#/, "")
-    );
-    const queryParams = new URLSearchParams(window.location.search);
-
-    const recoveryError =
-      hashParams.get("error_code") || queryParams.get("error_code");
-
-    if (recoveryError) {
-      showScreen("loginScreen");
-      showMessage(
-        "loginMessage",
-        recoveryError === "otp_expired"
-          ? "O link expirou ou já foi utilizado. Solicite outro link."
-          : "Não foi possível validar o link. Solicite uma nova recuperação.",
-        true
-      );
-      return;
-    }
-
-    const isRecovery =
-      hashParams.get("type") === "recovery" ||
-      queryParams.get("type") === "recovery";
-
-    if (isRecovery) {
-      recoveryMode = true;
-      showScreen("passwordScreen");
-      showMessage("passwordMessage", "");
-
-      const { data, error } = await supabaseClient.auth.getSession();
-
-      if (error) throw error;
-
-      if (data.session?.user) {
-        currentUser = data.session.user;
-        return;
+    function connect(url, key) {
+      if (!window.supabase?.createClient) {
+        throw new Error("Não foi possível carregar a biblioteca Supabase. Verifique a conexão.");
       }
 
-      showScreen("loginScreen");
-      showMessage(
-        "loginMessage",
-        "Não foi possível validar a recuperação. Solicite um novo link.",
-        true
-      );
-      return;
-    }
+      url = String(url || "").trim().replace(/\/+$/, "");
+      key = String(key || "").trim();
 
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        recoveryMode = true;
-        currentUser = session?.user || null;
-
-        if (currentUser) {
-          showMessage("passwordMessage", "");
-          showScreen("passwordScreen");
-        } else {
-          showScreen("loginScreen");
-          showMessage(
-            "loginMessage",
-            "Não foi possível validar a recuperação. Solicite um novo link.",
-            true
-          );
-        }
+      if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) {
+        throw new Error("A URL do projeto parece inválida.");
       }
-    });
+      if (!key) throw new Error("Informe a chave publishable do Supabase.");
 
-    const { data, error } = await supabaseClient.auth.getSession();
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+        authSubscription = null;
+      }
 
-    if (error) throw error;
-
-    if (data.session) {
-      currentUser = data.session.user;
-      await enterApp();
-    } else {
-      showScreen("loginScreen");
-    }
-  } catch (error) {
-    showScreen("loginScreen");
-    showMessage(
-      "loginMessage",
-      error.message || "Erro ao iniciar o RevisaMed.",
-      true
-    );
-  }
-}
-
-      recoveryMode =
-        hashParams.get("type") === "recovery" ||
-        queryParams.get("type") === "recovery";
-
-      // O Supabase informa quando o link de recuperação é validado.
-      supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY") {
-          recoveryMode = true;
-          currentUser = session?.user || null;
-
-          if (currentUser) {
-            showMessage("passwordMessage", "");
-            showScreen("passwordScreen");
-          } else {
-            showScreen("loginScreen");
-            showMessage(
-              "loginMessage",
-              "Não foi possível validar a recuperação. Solicite um novo link.",
-              true
-            );
-          }
+      supabaseClient = window.supabase.createClient(url, key, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          flowType: "pkce"
         }
       });
 
-      const { data, error } = await supabaseClient.auth.getSession();
+      localStorage.setItem("revisamed_url", url);
+      localStorage.setItem("revisamed_key", key);
+    }
 
-      if (error) throw error;
+    function openConfig() {
+      $("projectUrl").value =
+        localStorage.getItem("revisamed_url") || DEFAULT_URL;
+      $("publishableKey").value =
+        localStorage.getItem("revisamed_key") || "";
+      showScreen("configScreen");
+    }
 
-      if (recoveryMode) {
-        currentUser = data.session?.user || null;
+    function recoveryFromUrl() {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const query = new URLSearchParams(location.search);
+      const type = hash.get("type") || query.get("type");
+      const errorCode = hash.get("error_code") || query.get("error_code");
+      const code = query.get("code");
 
-        if (currentUser) {
-          showMessage("passwordMessage", "");
+      return {
+        type,
+        errorCode,
+        code,
+        hasRecoveryTokens:
+          type === "recovery" ||
+          Boolean(code && (query.get("next") || type === "recovery"))
+      };
+    }
+
+    function clearAuthUrl() {
+      try {
+        history.replaceState(null, document.title,
+          location.pathname + location.search.replace(/([?&])(code|error|error_code|error_description|type)=[^&]*/g, "$1").replace(/[?&]$/, ""));
+      } catch (_) {}
+    }
+
+    function todayStart() {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function isDue(card) {
+      if (!card.next_review) return true;
+      const date = new Date(card.next_review);
+      return !Number.isNaN(date.getTime()) && date <= new Date();
+    }
+
+    function difficultyLabel(value) {
+      return ({ easy: "Fácil", medium: "Média", hard: "Difícil" })[value] || "Média";
+    }
+
+    async function start() {
+      try {
+        const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
+        const key = localStorage.getItem("revisamed_key") || "";
+
+        if (!key) {
+          openConfig();
+          return;
+        }
+
+        connect(url, key);
+
+        const recovery = recoveryFromUrl();
+
+        if (recovery.errorCode) {
+          showScreen("loginScreen");
+          showMessage("loginMessage",
+            recovery.errorCode === "otp_expired"
+              ? "O link expirou ou já foi utilizado. Será necessário solicitar outro quando possível."
+              : "Não foi possível validar o link. Verifique se ele está completo e tente novamente.",
+            true);
+          return;
+        }
+
+        if (recovery.type === "recovery") {
+          recoveryMode = true;
           showScreen("passwordScreen");
+          showMessage("passwordMessage", "Validando o link...");
+
+          // O cliente processa os tokens da URL e dispara PASSWORD_RECOVERY.
+          const { data, error } = await supabaseClient.auth.getSession();
+          if (error) throw error;
+
+          if (data.session?.user) {
+            currentUser = data.session.user;
+            showMessage("passwordMessage", "");
+            return;
+          }
+
+          // A sessão pode chegar pelo evento assíncrono do SDK.
+          showMessage("passwordMessage",
+            "O link ainda não foi validado. Aguarde um instante ou abra o link completo novamente.",
+            true);
+          return;
+        }
+
+        authSubscription = supabaseClient.auth.onAuthStateChange(
+          async (event, session) => {
+            if (event === "PASSWORD_RECOVERY") {
+              recoveryMode = true;
+              currentUser = session?.user || null;
+              showScreen("passwordScreen");
+              showMessage("passwordMessage", "");
+            } else if (event === "SIGNED_OUT") {
+              currentUser = null;
+              cards = [];
+              showScreen("loginScreen");
+            } else if (event === "SIGNED_IN" && !recoveryMode) {
+              currentUser = session?.user || null;
+              if (currentUser) await enterApp();
+            }
+          }
+        ).data.subscription;
+
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) throw error;
+
+        if (data.session?.user) {
+          currentUser = data.session.user;
+          await enterApp();
         } else {
           showScreen("loginScreen");
-          showMessage(
-            "loginMessage",
-            "O link abriu, mas a sessão de recuperação não foi validada. Solicite um novo link.",
-            true
-          );
         }
+      } catch (error) {
+        showScreen("loginScreen");
+        showMessage("loginMessage",
+          error.message || "Não foi possível iniciar o RevisaMed.", true);
+      }
+    }
+
+    async function enterApp() {
+      if (!currentUser) return;
+      $("accountEmail").textContent = currentUser.email || "";
+      showScreen("appScreen");
+      showMessage("globalMessage", "");
+      await loadCards();
+    }
+
+    async function loadCards() {
+      if (!supabaseClient || !currentUser || loadingCards) return;
+      loadingCards = true;
+      showMessage("globalMessage", "Carregando flashcards...");
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("flashcards")
+          .select("id,user_id,question,answer,difficulty,next_review,created_at,interval_days,subject,topic")
+          .eq("user_id", currentUser.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        cards = data || [];
+        updateStats();
+        renderStudy();
+        renderCardsList();
+        renderSubjectFilter();
+        showMessage("globalMessage", "");
+      } catch (error) {
+        showMessage("globalMessage",
+          "Não foi possível carregar os flashcards: " + error.message, true);
+      } finally {
+        loadingCards = false;
+      }
+    }
+
+    function updateStats() {
+      $("totalCount").textContent = cards.length;
+      $("dueCount").textContent = cards.filter(isDue).length;
+    }
+
+    function renderSubjectFilter() {
+      const select = $("studySubject");
+      const previous = select.value;
+      const subjects = [...new Set(cards.map(c => c.subject).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+      select.replaceChildren(new Option("Todas as matérias", ""));
+      subjects.forEach(subject => select.add(new Option(subject, subject)));
+      if (subjects.includes(previous)) select.value = previous;
+    }
+
+    function renderStudy(reset = true) {
+      if (reset) {
+        const subject = $("studySubject").value;
+        studyQueue = cards.filter(c => isDue(c) && (!subject || c.subject === subject));
+        studyIndex = 0;
+        answerVisible = false;
+      }
+
+      const area = $("studyArea");
+      if (!studyQueue.length) {
+        area.innerHTML = "";
+        const p = document.createElement("p");
+        p.className = "muted";
+        p.textContent = cards.length
+          ? "Nenhum card pendente nesse filtro. Você pode estudar todos os cards na seção Meus cards."
+          : "Você ainda não tem flashcards. Crie seu primeiro card na aba Criar.";
+        area.append(p);
         return;
       }
 
-      if (data.session) {
-        currentUser = data.session.user;
-        await enterApp();
-      } else {
-        showScreen("loginScreen");
+      if (studyIndex >= studyQueue.length) {
+        area.innerHTML = "";
+        const h = document.createElement("h3");
+        h.textContent = "Revisão concluída!";
+        const p = document.createElement("p");
+        p.className = "muted";
+        p.textContent = "Você terminou os cards pendentes desta sessão.";
+        const btn = document.createElement("button");
+        btn.textContent = "Atualizar revisão";
+        btn.addEventListener("click", () => loadCards());
+        area.append(h, p, btn);
+        return;
       }
-    } catch (error) {
-      showScreen("loginScreen");
-      showMessage(
-        "loginMessage",
-        error.message || "Erro ao iniciar o RevisaMed.",
-        true
-      );
+
+      const card = studyQueue[studyIndex];
+      area.innerHTML = "";
+
+      const progress = document.createElement("p");
+      progress.className = "muted";
+      progress.textContent = `Card ${studyIndex + 1} de ${studyQueue.length}`;
+
+      const box = document.createElement("div");
+      box.className = "flashcard";
+
+      const subject = document.createElement("span");
+      subject.className = "tag";
+      subject.textContent = card.subject || "Sem matéria";
+
+      const topic = document.createElement("span");
+      topic.className = "tag";
+      topic.textContent = card.topic || "Sem assunto";
+
+      const difficulty = document.createElement("span");
+      difficulty.className = "tag";
+      difficulty.textContent = difficultyLabel(card.difficulty);
+
+      const question = document.createElement("div");
+      question.className = "question";
+      question.textContent = card.question;
+
+      box.append(subject, topic, difficulty, question);
+
+      if (answerVisible) {
+        const answer = document.createElement("div");
+        answer.className = "answer";
+        answer.textContent = card.answer;
+        box.append(answer);
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      if (!answerVisible) {
+        const reveal = document.createElement("button");
+        reveal.textContent = "Revelar resposta";
+        reveal.addEventListener("click", () => {
+          answerVisible = true;
+          renderStudy(false);
+        });
+        actions.append(reveal);
+      } else {
+        [
+          { label: "Errei", value: "hard", days: 1 },
+          { label: "Difícil", value: "medium", days: 2 },
+          { label: "Acertei", value: "easy", days: 4 }
+        ].forEach(option => {
+          const btn = document.createElement("button");
+          btn.className = option.value === "hard" ? "secondary" : "";
+          btn.textContent = option.label;
+          btn.addEventListener("click", () =>
+            markReviewed(card, option.value, option.days, btn));
+          actions.append(btn);
+        });
+      }
+
+      area.append(progress, box, actions);
     }
-  }
 
-  async function enterApp() {
-    if (!currentUser) return;
-    $("accountEmail").textContent = currentUser.email || "";
-    showScreen("appScreen");
-    showMessage("globalMessage", "");
-    await loadCards();
-  }
+    async function markReviewed(card, difficulty, days, button) {
+      button.disabled = true;
+      try {
+        const next = new Date();
+        next.setDate(next.getDate() + days);
 
-  async function loadCards() {
-    const { data, error } = await supabaseClient
-      .from("flashcards")
-      .select(
-        "id,user_id,question,answer,difficulty,next_review,created_at,interval_days,subject,topic"
-      )
-      .eq("user_id", currentUser.id)
-      .order("next_review", { ascending: true });
+        const { error } = await supabaseClient
+          .from("flashcards")
+          .update({
+            difficulty,
+            next_review: next.toISOString(),
+            interval_days: days
+          })
+          .eq("id", card.id)
+          .eq("user_id", currentUser.id);
 
-    if (error) {
-      showMessage(
-        "globalMessage",
-        "Não foi possível carregar os flashcards: " + error.message,
-        true
-      );
-      return;
+        if (error) throw error;
+
+        studyIndex++;
+        answerVisible = false;
+        await loadCards();
+        renderStudy(false);
+      } catch (error) {
+        button.disabled = false;
+        showMessage("globalMessage", "Não foi possível registrar a revisão: " + error.message, true);
+      }
     }
 
-    allCards = data || [];
-    renderStats();
-    renderReview();
-    renderCards();
-    renderSubjectFilter();
-  }
+    function renderCardsList() {
+      const list = $("cardsList");
+      const term = $("searchCards").value.trim().toLocaleLowerCase("pt-BR");
+      list.replaceChildren();
 
-  function renderStats() {
-    $("totalCount").textContent = allCards.length;
-    $("dueCount").textContent = dueCards().length;
-    $("reviewedCount").textContent = reviewedToday;
-  }
+      const filtered = cards.filter(card =>
+        [card.subject, card.topic, card.question, card.answer]
+          .some(value => String(value || "").toLocaleLowerCase("pt-BR").includes(term))
+      );
 
-  function setTab(id) {
-    ["reviewSection", "createSection", "cardsSection"].forEach(section => {
-      $(section).classList.toggle("hidden", section !== id);
+      if (!filtered.length) {
+        const p = document.createElement("p");
+        p.className = "muted";
+        p.textContent = "Nenhum flashcard encontrado.";
+        list.append(p);
+        return;
+      }
+
+      filtered.forEach(card => {
+        const item = document.createElement("div");
+        item.className = "card-item";
+
+        const title = document.createElement("strong");
+        title.textContent = card.question;
+
+        const info = document.createElement("p");
+        info.className = "muted";
+        info.textContent = `${card.subject || "Sem matéria"} · ${card.topic || "Sem assunto"}`;
+
+        const preview = document.createElement("p");
+        preview.textContent = card.answer.length > 180
+          ? card.answer.slice(0, 180) + "…"
+          : card.answer;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const edit = document.createElement("button");
+        edit.className = "secondary";
+        edit.textContent = "Editar";
+        edit.addEventListener("click", () => editCard(card));
+
+        const remove = document.createElement("button");
+        remove.className = "danger";
+        remove.textContent = "Excluir";
+        remove.addEventListener("click", () => deleteCard(card, remove));
+
+        actions.append(edit, remove);
+        item.append(title, info, preview, actions);
+        list.append(item);
+      });
+    }
+
+    function resetCardForm() {
+      $("cardForm").reset();
+      $("editingId").value = "";
+      $("editorTitle").textContent = "Criar flashcard";
+      $("saveCardButton").textContent = "Salvar flashcard";
+      $("cancelEditButton").classList.add("hidden");
+      showMessage("cardMessage", "");
+    }
+
+    function editCard(card) {
+      $("editingId").value = card.id;
+      $("subject").value = card.subject || "";
+      $("topic").value = card.topic || "";
+      $("question").value = card.question;
+      $("answer").value = card.answer;
+      $("difficulty").value = card.difficulty || "medium";
+      $("editorTitle").textContent = "Editar flashcard";
+      $("saveCardButton").textContent = "Salvar alterações";
+      $("cancelEditButton").classList.remove("hidden");
+      activateTab("createTab");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteCard(card, button) {
+      if (!confirm("Deseja realmente excluir este flashcard?")) return;
+      button.disabled = true;
+
+      try {
+        const { error } = await supabaseClient
+          .from("flashcards")
+          .delete()
+          .eq("id", card.id)
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+        showMessage("listMessage", "Flashcard excluído.");
+        await loadCards();
+      } catch (error) {
+        button.disabled = false;
+        showMessage("listMessage", "Não foi possível excluir: " + error.message, true);
+      }
+    }
+
+    function activateTab(tabId) {
+      ["studyTab", "createTab", "listTab"].forEach(id => {
+        $(id).classList.toggle("hidden", id !== tabId);
+      });
+
+      document.querySelectorAll("[data-tab]").forEach(button => {
+        const active = button.dataset.tab === tabId;
+        button.classList.toggle("active", active);
+        button.classList.toggle("secondary", !active);
+      });
+
+      if (tabId === "listTab") renderCardsList();
+    }
+
+    $("configForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      try {
+        connect($("projectUrl").value, $("publishableKey").value);
+        showMessage("configMessage", "Configuração salva.");
+        await start();
+      } catch (error) {
+        showMessage("configMessage", error.message, true);
+      }
     });
+
+    $("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const button = $("loginButton");
+      setBusy(button, true, "Entrando...");
+
+      try {
+        if (!supabaseClient) throw new Error("Configure o projeto primeiro.");
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: $("email").value.trim(),
+          password: $("password").value
+        });
+
+        if (error) throw error;
+        currentUser = data.user || data.session?.user || null;
+        if (!currentUser) throw new Error("Não foi possível iniciar a sessão.");
+        await enterApp();
+      } catch (error) {
+        showMessage("loginMessage", error.message || "Não foi possível entrar.", true);
+      } finally {
+        setBusy(button, false);
+      }
+    });
+
+    $("signupButton").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      if (!email || !password) {
+        showMessage("loginMessage", "Informe seu e-mail e uma senha para criar a conta.", true);
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage("loginMessage", "Use uma senha com pelo menos 6 caracteres.", true);
+        return;
+      }
+
+      const button = $("signupButton");
+      setBusy(button, true, "Criando...");
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: location.origin + location.pathname
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.session) {
+          currentUser = data.user;
+          await enterApp();
+        } else {
+          showMessage("loginMessage",
+            "Cadastro enviado. Verifique seu e-mail para confirmar a conta.");
+        }
+      } catch (error) {
+        showMessage("loginMessage", error.message || "Não foi possível criar a conta.", true);
+      } finally {
+        setBusy(button, false);
+      }
+    });
+
+    $("resetButton").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      if (!email) {
+        showMessage("loginMessage", "Digite seu e-mail no campo acima.", true);
+        $("email").focus();
+        return;
+      }
+
+      const button = $("resetButton");
+      setBusy(button, true, "Enviando...");
+
+      try {
+        const redirectTo = location.origin + location.pathname;
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo
+        });
+        if (error) throw error;
+
+        showMessage("loginMessage",
+          "Se a solicitação foi aceita, você receberá um e-mail com as instruções. Verifique também o spam.");
+      } catch (error) {
+        showMessage("loginMessage", error.message || "Não foi possível enviar o e-mail.", true);
+      } finally {
+        setBusy(button, false);
+      }
+    });
+
+    $("passwordForm").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const password = $("newPassword").value;
+      const confirmation = $("confirmPassword").value;
+      const button = event.submitter || $("passwordForm").querySelector("button");
+
+      if (password.length < 6) {
+        showMessage("passwordMessage", "A senha precisa ter pelo menos 6 caracteres.", true);
+        return;
+      }
+
+      if (password !== confirmation) {
+        showMessage("passwordMessage", "As senhas não são iguais.", true);
+        return;
+      }
+
+      setBusy(button, true, "Salvando...");
+
+      try {
+        if (!supabaseClient) throw new Error("A conexão não está configurada.");
+
+        const { data: sessionData, error: sessionError } =
+          await supabaseClient.auth.getSession();
+
+        if (sessionError) throw sessionError;
+        if (!sessionData.session?.user) {
+          throw new Error("A sessão de recuperação não foi validada. Abra o link mais recente recebido por e-mail.");
+        }
+
+        const { error } = await supabaseClient.auth.updateUser({ password });
+        if (error) throw error;
+
+        recoveryMode = false;
+        $("passwordForm").reset();
+        showMessage("passwordMessage", "Senha alterada com sucesso. Entre novamente com a nova senha.");
+
+        await supabaseClient.auth.signOut();
+        currentUser = null;
+        clearAuthUrl();
+        showScreen("loginScreen");
+        showMessage("loginMessage", "Senha alterada com sucesso. Entre com sua nova senha.");
+      } catch (error) {
+        showMessage("passwordMessage", error.message || "Não foi possível alterar a senha.", true);
+      } finally {
+        setBusy(button, false);
+      }
+    });
+
+    $("cardForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!currentUser) return;
+
+      const button = $("saveCardButton");
+      setBusy(button, true, "Salvando...");
+
+      try {
+        const id = $("editingId").value;
+        const payload = {
+          user_id: currentUser.id,
+          subject: $("subject").value.trim(),
+          topic: $("topic").value.trim(),
+          question: $("question").value.trim(),
+          answer: $("answer").value.trim(),
+          difficulty: $("difficulty").value,
+          ...(id ? {} : {
+            next_review: new Date().toISOString(),
+            interval_days: 0
+          })
+        };
+
+        const result = id
+          ? await supabaseClient.from("flashcards").update(payload)
+              .eq("id", id).eq("user_id", currentUser.id)
+          : await supabaseClient.from("flashcards").insert(payload);
+
+        if (result.error) throw result.error;
+
+        resetCardForm();
+        showMessage("cardMessage", id ? "Flashcard atualizado." : "Flashcard salvo.");
+        await loadCards();
+      } catch (error) {
+        showMessage("cardMessage", "Não foi possível salvar: " + error.message, true);
+      } finally {
+        setBusy(button, false);
+      }
+    });
+
+    $("cancelEditButton").addEventListener("click", resetCardForm);
+    $("studySubject").addEventListener("change", () => renderStudy(true));
+    $("searchCards").addEventListener("input", renderCardsList);
 
     document.querySelectorAll("[data-tab]").forEach(button => {
-      button.classList.toggle("active", button.dataset.tab === id);
+      button.addEventListener("click", () => activateTab(button.dataset.tab));
     });
 
-    if (id === "cardsSection") renderCards();
-  }
-
-  function renderReview() {
-    const area = $("reviewArea");
-    const due = dueCards();
-
-    if (!due.length) {
-      currentReview = null;
-      area.innerHTML =
-        '<div class="empty">Você não tem flashcards pendentes para hoje.<br>Você pode criar novos cartões ou voltar mais tarde.</div>';
-      return;
-    }
-
-    if (!currentReview || !due.some(card => card.id === currentReview.id)) {
-      currentReview = due[0];
-      answerVisible = false;
-    }
-
-    const card = currentReview;
-
-    area.innerHTML = `
-      <div class="flashcard">
-        <div>
-          ${card.subject
-            ? `<span class="pill">${escapeHTML(card.subject)}</span>` : ""}
-          ${card.topic
-            ? `<span class="pill">${escapeHTML(card.topic)}</span>` : ""}
-        </div>
-
-        <div class="question">${escapeHTML(card.question)}</div>
-
-        ${answerVisible
-          ? `<div class="answer">${escapeHTML(card.answer)}</div>
-             <p class="muted">Como você se lembrou?</p>
-             <button data-grade="easy">Fácil</button>
-             <button data-grade="medium" class="secondary">Médio</button>
-             <button data-grade="hard" class="danger">Difícil</button>`
-          : `<button id="showAnswerButton">Mostrar resposta</button>
-             <button id="skipButton" class="secondary">Pular</button>`
+    $("logoutButton").addEventListener("click", async () => {
+      try {
+        if (supabaseClient) {
+          const { error } = await supabaseClient.auth.signOut();
+          if (error) throw error;
         }
-      </div>
-      <p class="muted">${due.length} cartão(ões) pendente(s)</p>
-    `;
-
-    if ($("showAnswerButton")) {
-      $("showAnswerButton").onclick = () => {
-        answerVisible = true;
-        renderReview();
-      };
-    }
-
-    if ($("skipButton")) {
-      $("skipButton").onclick = () => {
-        const index = due.findIndex(item => item.id === card.id);
-        currentReview = due[(index + 1) % due.length];
-        answerVisible = false;
-        renderReview();
-      };
-    }
-
-    area.querySelectorAll("[data-grade]").forEach(button => {
-      button.onclick = () => gradeCard(card, button.dataset.grade);
-    });
-  }
-
-  function nextInterval(card, grade) {
-    const old = Math.max(0, Number(card.interval_days) || 0);
-
-    if (grade === "hard") return Math.max(1, Math.round(old ? old * 1.2 : 1));
-    if (grade === "easy") return Math.max(3, Math.round(old ? old * 2.5 : 4));
-    return Math.max(2, Math.round(old ? old * 2 : 2));
-  }
-
-  async function gradeCard(card, grade) {
-    const days = nextInterval(card, grade);
-    const next = new Date();
-    next.setDate(next.getDate() + days);
-
-    const nextDate = new Date(
-      next.getTime() - next.getTimezoneOffset() * 60000
-    ).toISOString().slice(0, 10);
-
-    const { error } = await supabaseClient
-      .from("flashcards")
-      .update({
-        difficulty: grade,
-        next_review: nextDate,
-        interval_days: days
-      })
-      .eq("id", card.id)
-      .eq("user_id", currentUser.id);
-
-    if (error) {
-      showMessage("globalMessage", "Erro ao registrar revisão: " + error.message, true);
-      return;
-    }
-
-    reviewedToday++;
-    currentReview = null;
-    answerVisible = false;
-    await loadCards();
-  }
-
-  function clearForm() {
-    editingId = null;
-    $("cardForm").reset();
-    $("cardId").value = "";
-    $("formTitle").textContent = "Criar flashcard";
-    $("saveCardButton").textContent = "Salvar flashcard";
-    $("cancelEditButton").classList.add("hidden");
-    showMessage("formMessage", "");
-  }
-
-  function editCard(id) {
-    const card = allCards.find(item => item.id === id);
-    if (!card) return;
-
-    editingId = id;
-    $("cardId").value = id;
-    $("subject").value = card.subject || "";
-    $("topic").value = card.topic || "";
-    $("question").value = card.question || "";
-    $("answer").value = card.answer || "";
-    $("difficulty").value = card.difficulty || "medium";
-
-    $("formTitle").textContent = "Editar flashcard";
-    $("saveCardButton").textContent = "Salvar alterações";
-    $("cancelEditButton").classList.remove("hidden");
-    setTab("createSection");
-  }
-
-  async function saveCard(event) {
-    event.preventDefault();
-    if (!currentUser) return;
-
-    const payload = {
-      subject: $("subject").value.trim(),
-      topic: $("topic").value.trim(),
-      question: $("question").value.trim(),
-      answer: $("answer").value.trim(),
-      difficulty: $("difficulty").value
-    };
-
-    if (!payload.question || !payload.answer) {
-      showMessage("formMessage", "Preencha a pergunta e a resposta.", true);
-      return;
-    }
-
-    setBusy("saveCardButton", true, "Salvando...");
-
-    let result;
-
-    if (editingId) {
-      result = await supabaseClient
-        .from("flashcards")
-        .update(payload)
-        .eq("id", editingId)
-        .eq("user_id", currentUser.id);
-    } else {
-      result = await supabaseClient
-        .from("flashcards")
-        .insert({
-          ...payload,
-          user_id: currentUser.id,
-          next_review: today(),
-          interval_days: 0
-        });
-    }
-
-    setBusy("saveCardButton", false);
-
-    if (result.error) {
-      showMessage("formMessage", "Não foi possível salvar: " + result.error.message, true);
-      return;
-    }
-
-    clearForm();
-    showMessage("formMessage", "Flashcard salvo com sucesso.");
-    await loadCards();
-  }
-
-  function renderSubjectFilter() {
-    const select = $("subjectFilter");
-    const current = select.value;
-
-    const subjects = [
-      ...new Set(
-        allCards.map(card => (card.subject || "").trim()).filter(Boolean)
-      )
-    ].sort((a, b) => a.localeCompare(b, "pt-BR"));
-
-    select.innerHTML =
-      '<option value="">Todas as matérias</option>' +
-      subjects.map(subject =>
-        `<option value="${escapeHTML(subject)}">${escapeHTML(subject)}</option>`
-      ).join("");
-
-    if (subjects.includes(current)) select.value = current;
-  }
-
-  function renderCards() {
-    const list = $("cardsList");
-    if (!list) return;
-
-    const filter = $("subjectFilter").value;
-    const query = $("searchCards").value.trim().toLocaleLowerCase("pt-BR");
-
-    const cards = allCards.filter(card => {
-      const matchesSubject = !filter || (card.subject || "") === filter;
-      const text = [
-        card.question, card.answer, card.subject, card.topic
-      ].map(value => String(value || "").toLocaleLowerCase("pt-BR"));
-
-      return matchesSubject && (!query || text.some(value => value.includes(query)));
-    });
-
-    if (!cards.length) {
-      list.innerHTML = '<div class="empty">Nenhum flashcard encontrado.</div>';
-      return;
-    }
-
-    list.innerHTML = cards.map(card => `
-      <article class="flashcard">
-        <div>
-          ${card.subject
-            ? `<span class="pill">${escapeHTML(card.subject)}</span>` : ""}
-          ${card.topic
-            ? `<span class="pill">${escapeHTML(card.topic)}</span>` : ""}
-        </div>
-
-        <div class="question">${escapeHTML(card.question)}</div>
-        <div class="answer">${escapeHTML(card.answer)}</div>
-        <p class="muted">Próxima revisão: ${escapeHTML(card.next_review || "Hoje")}</p>
-
-        <div class="card-actions">
-          <button class="secondary" data-edit="${escapeHTML(card.id)}">Editar</button>
-          <button class="danger" data-delete="${escapeHTML(card.id)}">Excluir</button>
-        </div>
-      </article>
-    `).join("");
-
-    list.querySelectorAll("[data-edit]").forEach(button => {
-      button.onclick = () => editCard(button.dataset.edit);
-    });
-
-    list.querySelectorAll("[data-delete]").forEach(button => {
-      button.onclick = () => deleteCard(button.dataset.delete);
-    });
-  }
-
-  async function deleteCard(id) {
-    const card = allCards.find(item => item.id === id);
-    if (!card || !confirm("Excluir este flashcard permanentemente?")) return;
-
-    const { error } = await supabaseClient
-      .from("flashcards")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", currentUser.id);
-
-    if (error) {
-      showMessage("globalMessage", "Não foi possível excluir: " + error.message, true);
-      return;
-    }
-
-    await loadCards();
-  }
-
-  // SALVAR CONFIGURAÇÃO
-  $("saveConfig").addEventListener("click", () => {
-    try {
-      connect($("projectUrl").value, $("publishableKey").value);
-      showMessage("configMessage", "");
-      showScreen("loginScreen");
-    } catch (error) {
-      showMessage("configMessage", error.message, true);
-    }
-  });
-
-  $("configButton").addEventListener("click", openConfig);
-
-  // ENTRAR
-  $("loginForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    if (!supabaseClient) {
-      openConfig();
-      return;
-    }
-
-    setBusy("loginButton", true, "Entrando...");
-
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: $("email").value.trim(),
-      password: $("password").value
-    });
-
-    setBusy("loginButton", false);
-
-    if (error) {
-      showMessage("loginMessage", "Não foi possível entrar: " + error.message, true);
-      return;
-    }
-
-    currentUser = data.user;
-    showMessage("loginMessage", "");
-    await enterApp();
-  });
-
-  // ENVIAR LINK DE RECUPERAÇÃO
-  $("resetButton").addEventListener("click", async () => {
-    if (!supabaseClient) {
-      openConfig();
-      return;
-    }
-
-    const email = $("email").value.trim();
-
-    if (!email) {
-      showMessage("loginMessage", "Digite seu e-mail primeiro.", true);
-      return;
-    }
-
-    setBusy("resetButton", true, "Enviando...");
-
-    const redirectTo = window.location.origin + window.location.pathname;
-
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo
-    });
-
-    setBusy("resetButton", false);
-
-    if (error) {
-      showMessage("loginMessage", "Não foi possível enviar o e-mail: " + error.message, true);
-    } else {
-      showMessage(
-        "loginMessage",
-        "Se esse e-mail estiver cadastrado, você receberá instruções para redefinir a senha."
-      );
-    }
-  });
-
-  // SALVAR NOVA SENHA
-  $("newPasswordForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    if (!supabaseClient) return;
-
-    const password = $("newPassword").value;
-    const confirmation = $("confirmPassword").value;
-
-    if (password.length < 6) {
-      showMessage("passwordMessage", "A senha precisa ter pelo menos 6 caracteres.", true);
-      return;
-    }
-
-    if (password !== confirmation) {
-      showMessage("passwordMessage", "As senhas não coincidem.", true);
-      return;
-    }
-
-    setBusy("updatePasswordButton", true, "Salvando...");
-
-    const { error } = await supabaseClient.auth.updateUser({ password });
-
-    setBusy("updatePasswordButton", false);
-
-    if (error) {
-      showMessage("passwordMessage", "Não foi possível salvar a senha: " + error.message, true);
-      return;
-    }
-
-    $("newPasswordForm").reset();
-
-    try {
-      await supabaseClient.auth.signOut();
-    } catch (error) {
-      // A senha já pode ter sido atualizada; a pessoa pode tentar entrar.
-    }
-
-    currentUser = null;
-    recoveryMode = false;
-    showScreen("loginScreen");
-
-    showMessage(
-      "loginMessage",
-      "Senha atualizada! Agora entre com seu e-mail e a nova senha."
-    );
-  });
-
-  // SAIR
-  $("logoutButton").addEventListener("click", async () => {
-    if (supabaseClient) {
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) {
-        showMessage("globalMessage", "Erro ao sair: " + error.message, true);
-        return;
+        currentUser = null;
+        cards = [];
+        showScreen("loginScreen");
+        showMessage("loginMessage", "Você saiu da sua conta.");
+      } catch (error) {
+        showMessage("globalMessage", "Não foi possível sair: " + error.message, true);
       }
-    }
+    });
 
-    currentUser = null;
-    allCards = [];
-    showScreen("loginScreen");
-    showMessage("loginMessage", "Você saiu da sua conta.");
-  });
-
-  // FLASHCARDS
-  $("cardForm").addEventListener("submit", saveCard);
-  $("cancelEditButton").addEventListener("click", clearForm);
-
-  document.querySelectorAll("[data-tab]").forEach(button => {
-    button.addEventListener("click", () => setTab(button.dataset.tab));
-  });
-
-  $("subjectFilter").addEventListener("change", renderCards);
-  $("searchCards").addEventListener("input", renderCards);
-
-  // INICIAR O APLICATIVO
-  start();
-})();
-</script>
+    start();
+  </script>
 </body>
 </html>
