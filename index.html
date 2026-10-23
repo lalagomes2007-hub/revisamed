@@ -111,7 +111,29 @@ footer { text-align:center;color:var(--muted);font-size:12px;padding:20px; }
     <div id="loginMessage" aria-live="polite"></div>
   </section>
 
-  <section id="appScreen" class="hidden">
+ 
+  <section id="passwordScreen" class="card hidden">
+    <h2>Criar nova senha</h2>
+    <p>Escolha uma senha nova para sua conta RevisaMed.</p>
+
+    <form id="newPasswordForm">
+      <label for="newPassword">Nova senha</label>
+      <input id="newPassword" type="password"
+        autocomplete="new-password" minlength="6" required>
+
+      <label for="confirmPassword">Confirme a nova senha</label>
+      <input id="confirmPassword" type="password"
+        autocomplete="new-password" minlength="6" required>
+
+      <div class="actions">
+        <button type="submit">Salvar nova senha</button>
+      </div>
+    </form>
+
+    <div id="passwordMessage" aria-live="polite"></div>
+  </section>
+  
+   <section id="appScreen" class="hidden">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <div>
@@ -197,10 +219,10 @@ footer { text-align:center;color:var(--muted);font-size:12px;padding:20px; }
   }
 
   function showScreen(id) {
-    ["configScreen", "loginScreen", "appScreen"].forEach(screen => {
-      $(screen).classList.toggle("hidden", screen !== id);
-    });
-  }
+  ["configScreen", "loginScreen", "passwordScreen", "appScreen"].forEach(screen => {
+    $(screen).classList.toggle("hidden", screen !== id);
+  });
+}
 
   function dateOnly(date = new Date()) {
     const y = date.getFullYear();
@@ -251,23 +273,52 @@ footer { text-align:center;color:var(--muted);font-size:12px;padding:20px; }
     showScreen("configScreen");
   }
 
-  async function start() {
-    const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
-    const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
-    try {
-      connect(url, key);
-      showScreen("loginScreen");
-      const { data, error } = await supabaseClient.auth.getSession();
-      if (error) throw error;
-      if (data.session) {
-        currentUser = data.session.user;
-        await enterApp();
+  
+async function start() {
+  const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
+  const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
+
+  let recoveryMode = false;
+
+  try {
+    connect(url, key);
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryMode = true;
+        currentUser = session?.user || null;
+        showScreen("passwordScreen");
+        showMessage("passwordMessage", "");
       }
-    } catch (error) {
-      showMessage("globalMessage", error.message || "Erro ao iniciar.", true);
-      openConfig();
+    });
+
+    const hashParams = new URLSearchParams(
+      window.location.hash.replace(/^#/, "")
+    );
+
+    recoveryMode = hashParams.get("type") === "recovery";
+
+    showScreen(recoveryMode ? "passwordScreen" : "loginScreen");
+
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+
+    if (recoveryMode) {
+      currentUser = data.session?.user || null;
+      showScreen("passwordScreen");
+      return;
     }
+
+    if (data.session) {
+      currentUser = data.session.user;
+      await enterApp();
+    }
+  } catch (error) {
+    showMessage("globalMessage", error.message || "Erro ao iniciar.", true);
+    openConfig();
   }
+}
+
 
   async function enterApp() {
     if (!currentUser) return;
@@ -596,19 +647,68 @@ footer { text-align:center;color:var(--muted);font-size:12px;padding:20px; }
     await enterApp();
   });
 
+  
   $("resetButton").addEventListener("click", async () => {
     if (!supabaseClient) return openConfig();
+
     const email = $("email").value.trim();
+
     if (!email) {
-      showMessage("loginMessage", "Digite seu e-mail primeiro para receber o link de redefinição.", true);
+      showMessage(
+        "loginMessage",
+        "Digite seu e-mail primeiro para receber o link de redefinição.",
+        true
+      );
       return;
     }
+
     const redirectTo = window.location.origin + window.location.pathname;
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
-    showMessage("loginMessage", error
-      ? "Não foi possível enviar o e-mail: " + error.message
-      : "Se esse e-mail estiver cadastrado, você receberá instruções para redefinir a senha.");
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(
+      email,
+      { redirectTo }
+    );
+
+    showMessage(
+      "loginMessage",
+      error
+        ? "Não foi possível enviar o e-mail: " + error.message
+        : "Se esse e-mail estiver cadastrado, você receberá instruções para redefinir a senha."
+    );
   });
+
+  $("newPasswordForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const password = $("newPassword").value;
+    const confirmation = $("confirmPassword").value;
+
+    if (password.length < 6) {
+      showMessage("passwordMessage", "A senha precisa ter pelo menos 6 caracteres.", true);
+      return;
+    }
+
+    if (password !== confirmation) {
+      showMessage("passwordMessage", "As senhas não coincidem.", true);
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.updateUser({
+      password
+    });
+
+    if (error) {
+      showMessage("passwordMessage", "Não foi possível salvar a senha: " + error.message, true);
+      return;
+    }
+
+    $("newPasswordForm").reset();
+    showMessage("loginMessage", "Senha atualizada! Agora você pode entrar com seu e-mail e a nova senha.");
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    showScreen("loginScreen");
+  });
+
 
   $("logoutButton").addEventListener("click", async () => {
     await supabaseClient.auth.signOut();
