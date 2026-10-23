@@ -1,0 +1,10 @@
+{
+  "name": "RevisaMed",
+  "short_name": "RevisaMed",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f8f6",
+  "theme_color": "#f7f8f6",
+  "description": "Flashcards com revisão espaçada para vestibulandos."
+}
