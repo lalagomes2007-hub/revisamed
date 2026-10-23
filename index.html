@@ -626,16 +626,28 @@ if (data.session) {
       connect($("projectUrl").value, $("publishableKey").value);
       showMessage("globalMessage", "");
       showScreen("loginScreen");
-      const { data, error } = await supabaseClient.auth.getSession();
-      if (error) throw error;
-      if (data.session) {
-        currentUser = data.session.user;
-        await enterApp();
-      }
-    } catch (error) {
-      showScreen("configScreen");
-      showMessage("globalMessage", error.message || "Erro de conexão.", true);
-    }
+    const { data, error } = await supabaseClient.auth.getSession();
+if (error) throw error;
+
+const currentHash = new URLSearchParams(
+  window.location.hash.replace(/^#/, "")
+);
+
+if (
+  recoveryMode ||
+  currentHash.get("type") === "recovery" ||
+  currentHash.has("access_token") && currentHash.get("type") === "recovery"
+) {
+  recoveryMode = true;
+  currentUser = data.session?.user || null;
+  showScreen("passwordScreen");
+  return;
+}
+
+if (data.session) {
+  currentUser = data.session.user;
+  await enterApp();
+}
   });
 
   $("loginForm").addEventListener("submit", async event => {
