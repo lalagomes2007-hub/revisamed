@@ -273,12 +273,12 @@ footer { text-align:center;color:var(--muted);font-size:12px;padding:20px; }
     showScreen("configScreen");
   }
 
-  
+  let recoveryMode = false;
 async function start() {
   const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
   const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
 
-  let recoveryMode = false;
+  
 
   try {
     connect(url, key);
