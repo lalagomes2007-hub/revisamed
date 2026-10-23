@@ -292,16 +292,24 @@ async function start() {
       }
     });
 
-    const hashParams = new URLSearchParams(
-      window.location.hash.replace(/^#/, "")
-    );
+    
+const hashParams = new URLSearchParams(
+  window.location.hash.replace(/^#/, "")
+);
 
-    recoveryMode = hashParams.get("type") === "recovery";
+const recoveryError = hashParams.get("error_code");
+recoveryMode = hashParams.get("type") === "recovery";
 
-    showScreen(recoveryMode ? "passwordScreen" : "loginScreen");
+if (recoveryError === "otp_expired") {
+  showScreen("loginScreen");
+  showMessage(
+    "loginMessage",
+    "Este link de recuperação expirou ou já foi utilizado. Solicite um novo quando o envio de e-mails estiver liberado.",
+    true
+  );
+  return;
+}
 
-    const { data, error } = await supabaseClient.auth.getSession();
-    if (error) throw error;
 
     if (recoveryMode) {
       currentUser = data.session?.user || null;
