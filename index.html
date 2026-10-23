@@ -274,6 +274,66 @@ footer { text-align:center;color:var(--muted);font-size:12px;padding:20px; }
   }
 
   let recoveryMode = false;
+
+async function start() {
+  const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
+  const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
+
+  try {
+    connect(url, key);
+
+    const hashParams = new URLSearchParams(
+      window.location.hash.replace(/^#/, "")
+    );
+
+    const recoveryError = hashParams.get("error_code");
+
+    if (recoveryError === "otp_expired") {
+      showScreen("loginScreen");
+      showMessage(
+        "loginMessage",
+        "Este link expirou ou já foi utilizado. Solicite um novo link de recuperação.",
+        true
+      );
+      return;
+    }
+
+    recoveryMode = hashParams.get("type") === "recovery";
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryMode = true;
+        currentUser = session?.user || null;
+        showScreen("passwordScreen");
+        showMessage("passwordMessage", "");
+      }
+    });
+
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    if (recoveryMode) {
+      currentUser = data.session?.user || null;
+      showScreen("passwordScreen");
+      return;
+    }
+
+    if (data.session) {
+      currentUser = data.session.user;
+      await enterApp();
+    } else {
+      showScreen("loginScreen");
+    }
+  } catch (error) {
+    showMessage(
+      "globalMessage",
+      error.message || "Erro ao iniciar o RevisaMed.",
+      true
+    );
+    openConfig();
+  }
+}
 async function start() {
   const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
   const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
@@ -622,33 +682,23 @@ if (data.session) {
   }
 
   $("saveConfig").addEventListener("click", async () => {
-    try {
-      connect($("projectUrl").value, $("publishableKey").value);
-      showMessage("globalMessage", "");
-      showScreen("loginScreen");
-    const { data, error } = await supabaseClient.auth.getSession();
-if (error) throw error;
+  try {
+    connect(
+      $("projectUrl").value,
+      $("publishableKey").value
+    );
 
-const currentHash = new URLSearchParams(
-  window.location.hash.replace(/^#/, "")
-);
-
-if (
-  recoveryMode ||
-  currentHash.get("type") === "recovery" ||
-  currentHash.has("access_token") && currentHash.get("type") === "recovery"
-) {
-  recoveryMode = true;
-  currentUser = data.session?.user || null;
-  showScreen("passwordScreen");
-  return;
-}
-
-if (data.session) {
-  currentUser = data.session.user;
-  await enterApp();
-}
-  });
+    showMessage("globalMessage", "");
+    showScreen("loginScreen");
+  } catch (error) {
+    showMessage(
+      "globalMessage",
+      error.message || "Erro de conexão.",
+      true
+    );
+    openConfig();
+  }
+});
 
   $("loginForm").addEventListener("submit", async event => {
     event.preventDefault();
