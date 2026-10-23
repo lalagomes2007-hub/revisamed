@@ -433,31 +433,97 @@
 
   // ÚNICA FUNÇÃO DE INICIALIZAÇÃO
   async function start() {
-    try {
-      const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
-      const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
+  try {
+    const url = localStorage.getItem("revisamed_url") || DEFAULT_URL;
+    const key = localStorage.getItem("revisamed_key") || DEFAULT_KEY;
 
-      connect(url, key);
+    connect(url, key);
 
-      const hashParams = new URLSearchParams(
-        window.location.hash.replace(/^#/, "")
+    const hashParams = new URLSearchParams(
+      window.location.hash.replace(/^#/, "")
+    );
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const recoveryError =
+      hashParams.get("error_code") || queryParams.get("error_code");
+
+    if (recoveryError) {
+      showScreen("loginScreen");
+      showMessage(
+        "loginMessage",
+        recoveryError === "otp_expired"
+          ? "O link expirou ou já foi utilizado. Solicite outro link."
+          : "Não foi possível validar o link. Solicite uma nova recuperação.",
+        true
       );
-      const queryParams = new URLSearchParams(window.location.search);
+      return;
+    }
 
-      const recoveryError =
-        hashParams.get("error_code") || queryParams.get("error_code");
+    const isRecovery =
+      hashParams.get("type") === "recovery" ||
+      queryParams.get("type") === "recovery";
 
-      if (recoveryError) {
-        showScreen("loginScreen");
-        showMessage(
-          "loginMessage",
-          recoveryError === "otp_expired"
-            ? "O link expirou ou já foi utilizado. Solicite outro link."
-            : "Não foi possível validar o link. Solicite uma nova recuperação.",
-          true
-        );
+    if (isRecovery) {
+      recoveryMode = true;
+      showScreen("passwordScreen");
+      showMessage("passwordMessage", "");
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) throw error;
+
+      if (data.session?.user) {
+        currentUser = data.session.user;
         return;
       }
+
+      showScreen("loginScreen");
+      showMessage(
+        "loginMessage",
+        "Não foi possível validar a recuperação. Solicite um novo link.",
+        true
+      );
+      return;
+    }
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryMode = true;
+        currentUser = session?.user || null;
+
+        if (currentUser) {
+          showMessage("passwordMessage", "");
+          showScreen("passwordScreen");
+        } else {
+          showScreen("loginScreen");
+          showMessage(
+            "loginMessage",
+            "Não foi possível validar a recuperação. Solicite um novo link.",
+            true
+          );
+        }
+      }
+    });
+
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) throw error;
+
+    if (data.session) {
+      currentUser = data.session.user;
+      await enterApp();
+    } else {
+      showScreen("loginScreen");
+    }
+  } catch (error) {
+    showScreen("loginScreen");
+    showMessage(
+      "loginMessage",
+      error.message || "Erro ao iniciar o RevisaMed.",
+      true
+    );
+  }
+}
 
       recoveryMode =
         hashParams.get("type") === "recovery" ||
