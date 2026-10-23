@@ -317,10 +317,16 @@ if (recoveryError === "otp_expired") {
       return;
     }
 
-    if (data.session) {
-      currentUser = data.session.user;
-      await enterApp();
-    }
+  if (recoveryMode) {
+  currentUser = data.session?.user || null;
+  showScreen("passwordScreen");
+  return;
+}
+
+if (data.session) {
+  currentUser = data.session.user;
+  await enterApp();
+}
   } catch (error) {
     showMessage("globalMessage", error.message || "Erro ao iniciar.", true);
     openConfig();
